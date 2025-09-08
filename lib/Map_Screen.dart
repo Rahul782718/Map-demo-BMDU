@@ -3,6 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mapapi/DiractionRepositry.dart';
 import 'package:mapapi/Directions.dart';
+import 'package:provider/provider.dart';
+
+import 'Provider/Loaction_Provider.dart';
 
 class Map_Screen extends StatefulWidget {
   const Map_Screen({super.key});
@@ -14,7 +17,7 @@ class Map_Screen extends StatefulWidget {
 class _Map_ScreenState extends State<Map_Screen> {
 
 
-  static const _initialCameraPosition = CameraPosition(target: LatLng(28.618168,77.377317),zoom: 11.5);
+  // static const _initialCameraPosition = CameraPosition(target: LatLng(28.618168,77.377317),zoom: 11.5);
 
   late GoogleMapController  _googleMapController;
 
@@ -22,6 +25,13 @@ class _Map_ScreenState extends State<Map_Screen> {
    Marker? _orgmarker;
    Marker? _destination;
    Directions? _info;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() =>
+        context.read<LocationProvider>().getLocation());
+  }
 
 
   @override
@@ -32,6 +42,28 @@ class _Map_ScreenState extends State<Map_Screen> {
 
   @override
   Widget build(BuildContext context) {
+    final location = context.watch<LocationProvider>();
+    // final location = Provider.of<LocationProvider>(context)..getLocation();
+
+    // if still loading, show spinner
+    if (location.isLookingForLocation || location.userLat == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final currentMarker = Marker(
+      markerId: const MarkerId('current_location'),
+      position: LatLng(location.userLat!, location.userLong!),
+      infoWindow: const InfoWindow(title: 'You are here'),
+      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+    );
+
+    final CameraPosition _initialCameraPosition = CameraPosition(
+      target: LatLng(location.userLat!, location.userLong!),
+      zoom: 14,
+    );
+
 
     return Scaffold(
       appBar: AppBar(
@@ -57,12 +89,15 @@ class _Map_ScreenState extends State<Map_Screen> {
         alignment: Alignment.center,
         children: [
           GoogleMap(
-              myLocationButtonEnabled: false,
+            // myLocationEnabled: true,
+            compassEnabled: true,
+            myLocationButtonEnabled: false,
               zoomControlsEnabled: false,
               initialCameraPosition: _initialCameraPosition,
             onMapCreated: (controller) => _googleMapController = controller,
             markers: {
-                if(_orgmarker != null) _orgmarker!,
+              currentMarker,
+              if(_orgmarker != null) _orgmarker!,
               if(_destination != null) _destination!
             },
             polylines: {

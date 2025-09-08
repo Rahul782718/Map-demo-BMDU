@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mapapi/Map_Screen.dart';
+import 'package:provider/provider.dart';
 
 import 'Home_Screen.dart';
+import 'Provider/Loaction_Provider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +15,11 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MultiProvider(
+        providers: [
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
+    ],
+    child: MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -21,6 +27,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const HomeScreen(),
-    );
+    )
+        );
   }
 }
